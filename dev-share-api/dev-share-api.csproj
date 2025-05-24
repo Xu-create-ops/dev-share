@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>dev_share_api</RootNamespace>
+    <UserSecretsId>7d2964ee-d136-4d11-8096-abef4cee1bad</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

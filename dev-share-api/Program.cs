@@ -13,6 +13,17 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddControllers();            //  启用 [ApiController]
 builder.Services.AddEndpointsApiExplorer();
 
+//cors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost3000", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var innerChatClient = new AzureOpenAIClient(
     new Uri(builder.Configuration["AI:Endpoint"]!),
     new ApiKeyCredential(builder.Configuration["AI:Key"]!))  //存在userSecretsId里 dotnet user-secrets init
@@ -34,7 +45,7 @@ var app = builder.Build();
 
 // 注册 controller 路由
 app.MapControllers();  // 关键一行，告诉系统去扫描 Controllers/ 中的 API 类
-
+app.UseCors("AllowLocalhost3000");
 app.UseHttpsRedirection();
 app.Run();
 
