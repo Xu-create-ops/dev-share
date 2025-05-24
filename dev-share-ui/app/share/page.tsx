@@ -53,6 +53,20 @@ export default function ShareResourcePage() {
     // const resource = await processResourceWithAI({ url, prompt });
     
     // Simulate API call
+    
+    const res = await fetch('http://localhost:5066/api/extract',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: url
+      }),
+    })
+    if(!res.ok){
+      throw new Error('Request failed');
+    }
+
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     setIsSubmitting(false);
