@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using dev_share_api.Models;
 using dev_share_api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,14 +16,14 @@ namespace dev_share_api.Controllers
         }
 
         [HttpPost("generate")]
-        public async Task<IActionResult> GenerateEmbedding([FromBody] string input)
+        public async Task<IActionResult> GenerateEmbedding([FromBody] EmbeddingRequest request)
         {
-            if (string.IsNullOrWhiteSpace(input))
+            if (string.IsNullOrWhiteSpace(request.Summary))
             {
                 return BadRequest("string cannot be empty.");
             }
 
-            var response = await _embeddingService.GetEmbeddingAsync(input);
+            var response = await _embeddingService.GetEmbeddingAsync(request);
             if (response == null)
             {
                 return NotFound();

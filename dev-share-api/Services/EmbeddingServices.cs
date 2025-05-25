@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using dev_share_api.Models;
+using Microsoft.AspNetCore.Mvc;
 using OpenAI.Embeddings;
 using System;
 
@@ -16,9 +17,14 @@ namespace dev_share_api.Services
             _embeddingClient = embeddingClient;
         }
 
-        public async Task<ActionResult<float[]>> GetEmbeddingAsync(string input)
+        public string GetEmbeddingPrompt(EmbeddingRequest request)
         {
-            OpenAIEmbedding embedding = await _embeddingClient.GenerateEmbeddingAsync(input, options);
+            return $"Context: This is a {request.Type} about {string.Join(", ", request.Tags)}.\n\nSummary:\n{request.Summary}";
+        }
+
+        public async Task<ActionResult<float[]>> GetEmbeddingAsync(EmbeddingRequest request)
+        {
+            OpenAIEmbedding embedding = await _embeddingClient.GenerateEmbeddingAsync(GetEmbeddingPrompt(request), options);
             ReadOnlyMemory<float> vector = embedding.ToFloats();
             float[] result = vector.ToArray();
 
