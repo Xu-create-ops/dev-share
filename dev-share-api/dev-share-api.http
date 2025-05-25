@@ -1,6 +1,6 @@
-@dev_share_api_HostAddress = http://localhost:5066
+@dev_share_api_HostAddress = http://localhost:7122
 
-GET {{dev_share_api_HostAddress}}/weatherforecast/
+POST {{dev_share_api_HostAddress}}/embedding/
 Accept: application/json
 
 ###
