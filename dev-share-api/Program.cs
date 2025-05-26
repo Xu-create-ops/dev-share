@@ -29,8 +29,8 @@ builder.Services.AddCors(options =>
 
 
 var innerChatClient = new AzureOpenAIClient(
-    new Uri(Environment.GetEnvironmentVariable("4O_ENDPOINT")!), 
-    new ApiKeyCredential(Environment.GetEnvironmentVariable("4O_APIKEY")!))  //存在userSecretsId里 dotnet user-secrets init
+    new Uri(Environment.GetEnvironmentVariable("GPT_ENDPOINT")!), 
+    new ApiKeyCredential(Environment.GetEnvironmentVariable("GPT_APIKEY")!))  //存在userSecretsId里 dotnet user-secrets init
     .GetChatClient("gpt-4o-mini")
     .AsIChatClient();
 
