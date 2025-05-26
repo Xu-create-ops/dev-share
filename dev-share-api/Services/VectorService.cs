@@ -9,7 +9,7 @@ public class VectorService : IVectorService
 {
     private readonly QdrantClient _client;
     private readonly string _collection = "blotz-dev";
-    private readonly int _dimention = 4;
+    private readonly int _dimensions = 4;
 
     public VectorService(QdrantClient qdrantClient)
     {
@@ -17,7 +17,7 @@ public class VectorService : IVectorService
     }
 
     // init if there is no collection in vector db
-    public async Task InitializeAsync() => await _client.CreateCollectionAsync(_collection, new VectorParams { Size = (ulong)_dimention, Distance = Distance.Cosine });
+    public async Task InitializeAsync() => await _client.CreateCollectionAsync(_collection, new VectorParams { Size = (ulong)_dimensions, Distance = Distance.Cosine });
 
     public async Task IndexingAsync(string fieldName)
     {
