@@ -1,29 +1,38 @@
 using HtmlAgilityPack;
 using Microsoft.Playwright;
-using UrlExtractorApi.Models;
-using UrlExtractorApi.Services;
+using Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using Services;
+using Qdrant.Client.Grpc;
+using System.Text;
 
 namespace UrlExtractorApi.Controllers;
 
 [ApiController]
 [Route("api")]
-public class ExtractController : ControllerBase{
-    private readonly IChatClient _chatClient;
-    private readonly ArticleSummaryService _articleSummaryService;
-    public ExtractController(IChatClient chatClient,ArticleSummaryService articleSummaryService){
-        _chatClient = chatClient;
-        _articleSummaryService = articleSummaryService;
-    }
+public class ExtractController : ControllerBase
+{
+    private readonly ISummaryService _summaryService;
+    private readonly IEmbeddingService _embeddingService;
+    private readonly IVectorService _vectorService;
 
+    public ExtractController(
+        ISummaryService summaryService,
+        IEmbeddingService embeddingService,
+        IVectorService vectorService)
+    {
+        _summaryService = summaryService;
+        _embeddingService = embeddingService;
+        _vectorService = vectorService;
+    }
 
 
     [HttpPost("extract")]
     public async Task<IActionResult> Post([FromBody] UrlRequest request)
     {
 
-        var url = request.url;
+        var url = request.Url;
         Console.WriteLine($"Extracting: {url}");
 
         // 尝试 HtmlAgilityPack 抓取
@@ -35,13 +44,34 @@ public class ExtractController : ControllerBase{
             result = await TryPlaywright(url);
         }
 
-        await _articleSummaryService.SummarizeArticleAsync(result);
+        var prompt = new StringBuilder()
+                    .AppendLine("You will receive an input text and your task is to summarize the article in no more than 100 words.")
+                    .AppendLine("Only return the summary. Do not include any explanation.")
+                    .AppendLine("# Article content:")
+                    .AppendLine($"{result}")
+                    .ToString();
+
+        await _summaryService.SummarizeAsync(prompt);
         return Ok(new { url, content = result });
     }
 
+    [HttpPost("embedding/generate")]
+    public async Task<ActionResult<float[]>> GenerateEmbedding([FromBody] GenerateEmbeddingRequest request)
+    {
+        return Ok(await _embeddingService.GetEmbeddingAsync(request.Text));
+    }
 
-        // return Ok(new { url, content = result });
+    [HttpPut("embedding/put")]
+    public async Task<ActionResult<UpdateResult>> InsertEmbedding([FromBody] InsertEmbeddingRequest request)
+    {
+        return Ok(await _vectorService.UpsertEmbeddingAsync(request.Url, request.NoteId, request.Text, request.Vectors));
+    }
 
+    [HttpPut("embedding/search")]
+    public async Task<ActionResult<List<VectorSearchResultDto>>> SearchEmbedding([FromBody] SearchEmbeddingRequest request)
+    {
+        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives));
+    }
 
     private string? TryHtmlAgilityPack(string url)
     {

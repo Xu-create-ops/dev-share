@@ -1,19 +1,32 @@
-using Azure.AI.OpenAI;
-using Microsoft.Extensions.AI;
-using UrlExtractorApi.Services;
-using Azure;
-using System.ClientModel;
-
+using Microsoft.OpenApi.Models;
+using OpenAI;
+using Qdrant.Client;
+using Qdrant.Client.Grpc;
+using Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true); // overrides
+
+// optional - if you don't want to have 'appsettings.local.json' for debugging purpose
+// Load secrets in development before building
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
 }
-builder.Services.AddControllers();            //  启用 [ApiController]
-builder.Services.AddEndpointsApiExplorer();
 
-//cors
+// Add services to container
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+});
+
+// cors
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost3000", policy =>
@@ -24,33 +37,58 @@ builder.Services.AddCors(options =>
     });
 });
 
-var innerChatClient = new AzureOpenAIClient(
-    new Uri(builder.Configuration["AI:Endpoint"]!),
-    new ApiKeyCredential(builder.Configuration["AI:Key"]!))  //存在userSecretsId里 dotnet user-secrets init
-    .GetChatClient("gpt-4o-mini").AsIChatClient();
+// Config sections
+var openAiConfig = builder.Configuration.GetSection("OpenAI");
+var qdrantConfig = builder.Configuration.GetSection("Qdrant");
 
+// Qdrant client
+builder.Services.AddSingleton<QdrantClient>(_ =>
+{
+    var channel = QdrantChannel.ForAddress(
+        $"{qdrantConfig["Host"]}:6334",
+        new ClientConfiguration { ApiKey = qdrantConfig["ApiKey"] }
+    );
+    return new QdrantClient(new QdrantGrpcClient(channel));
+});
 
-builder.Services.AddSingleton<IChatClient>(innerChatClient);
-builder.Services.AddScoped<ArticleSummaryService>();
-// builder.Services.AddAzureOpenAIChatClient("azure", options =>
-// {
-//     options.Endpoint = new Uri(builder.Configuration["AI:Endpoint"]!);
-//     options.ApiKey = builder.Configuration["AI:Key"]!;
-//     options.DeploymentName = "gpt-4o-mini";
-// });
+// OpenAI client
+builder.Services.AddSingleton<OpenAIClient>(_ =>
+{
+    var apiKey = openAiConfig["ApiKey"]
+                 ?? throw new InvalidOperationException("OpenAI:ApiKey is missing");
+    return new OpenAIClient(apiKey);
+});
+
+// Application services
+builder.Services.AddScoped<IVectorService>(sp =>
+{
+    var qdrantClient = sp.GetRequiredService<QdrantClient>();
+    return new VectorService(qdrantClient);
+});
+
+builder.Services.AddScoped<IEmbeddingService>(sp =>
+{
+    var openAiClient = sp.GetRequiredService<OpenAIClient>();
+    return new EmbeddingService(openAiClient);
+});
+
+builder.Services.AddScoped<ISummaryService>(sp =>
+{
+    var openAiClient = sp.GetRequiredService<OpenAIClient>();
+    return new SummaryService(openAiClient);
+});
+
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-
-// 注册 controller 路由
-app.MapControllers();  // 关键一行，告诉系统去扫描 Controllers/ 中的 API 类
-app.UseCors("AllowLocalhost3000");
 app.UseHttpsRedirection();
-app.Run();
+app.UseCors("AllowLocalhost3000");
+app.MapControllers();
 
-
-
-
-
-
+await app.RunAsync();

@@ -1,6 +1,6 @@
-namespace UrlExtractorApi.Models;
+namespace Models;
 
 public class UrlRequest
 {
-    public string? url { get; set; }
+    public string? Url { get; set; }
 }
