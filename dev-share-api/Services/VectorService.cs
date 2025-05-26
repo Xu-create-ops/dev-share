@@ -19,11 +19,22 @@ public class VectorService : IVectorService
     // init if there is no collection in vector db
     public async Task InitializeAsync() => await _client.CreateCollectionAsync(_collection, new VectorParams { Size = (ulong)_dimensions, Distance = Distance.Cosine });
 
-    public async Task IndexingAsync(string fieldName)
+    public async Task<UpdateResult> IndexingAsync(string fieldName)
     {
-        await _client.CreatePayloadIndexAsync(
+        return await _client.CreatePayloadIndexAsync(
             collectionName: _collection,
-            fieldName: fieldName
+            fieldName: fieldName,
+            schemaType: PayloadSchemaType.Text,
+            indexParams: new PayloadIndexParams
+            {
+                TextIndexParams = new TextIndexParams
+                {
+                    Tokenizer = TokenizerType.Word,
+                    MinTokenLen = 2,
+                    MaxTokenLen = 10,
+                    Lowercase = true
+                }
+            }
         );
     }
 
@@ -42,12 +53,18 @@ public class VectorService : IVectorService
         return await _client.UpsertAsync(_collection, new List<PointStruct> { point });
     }
 
-    public async Task<List<VectorSearchResultDto>> SearchEmbeddingAsync(float[] queryVector, int topK)
+    public async Task<List<VectorSearchResultDto>> SearchEmbeddingAsync(float[] queryVector, int topK, string queryText)
     {
+        var filter = new Filter(
+                MatchText("content", queryText)
+            );
+
         var results = await _client.SearchAsync(
             _collection,
             queryVector,
-            limit: (ulong)topK
+            filter,
+            limit: (ulong)topK,
+            scoreThreshold: 0.7f
         );
 
         return results.Select(result =>
