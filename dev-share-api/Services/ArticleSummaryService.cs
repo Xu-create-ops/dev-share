@@ -1,4 +1,8 @@
+using Azure;
+using dev_share_api.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using System.Text.Json;
 
 
 namespace UrlExtractorApi.Services;
@@ -28,7 +32,7 @@ public class ArticleSummaryService
         Console.WriteLine(response.Text);
     }
 
-    public async Task GetCategorisedSummaryAsync(string article)
+    public async Task<ActionResult<EmbeddingRequest>> GetCategorisedSummaryAsync(string article)
     {
         var prompt = $$"""
         You are a helpful assistant skilled in understanding and summarising technical content. Given a tech article, please provide the following in JSON format based on this structure:
@@ -46,6 +50,7 @@ public class ArticleSummaryService
         """;
 
         var response = await _chatClient.GetResponseAsync(prompt);
-        Console.WriteLine(response.Text);
+
+        return JsonSerializer.Deserialize<EmbeddingRequest>(response.Text);
     }
 }

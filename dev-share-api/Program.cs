@@ -1,11 +1,10 @@
 using Azure;
 using Azure.AI.OpenAI;
 using dev_share_api.Services;
-using OpenAI;
-using OpenAI.Embeddings;
 using Microsoft.Extensions.AI;
 using UrlExtractorApi.Services;
 using System.ClientModel;
+using OpenAI.Embeddings;
 
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -28,18 +27,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-//Commented out because I dont have access
-/*
+
 var innerChatClient = new AzureOpenAIClient(
-    new Uri(builder.Configuration["AI:Endpoint"]!),
-    new ApiKeyCredential(builder.Configuration["AI:Key"]!))  //存在userSecretsId里 dotnet user-secrets init
+    new Uri(Environment.GetEnvironmentVariable("4O_ENDPOINT")!), 
+    new ApiKeyCredential(Environment.GetEnvironmentVariable("4O_APIKEY")!))  //存在userSecretsId里 dotnet user-secrets init
     .GetChatClient("gpt-4o-mini").AsIChatClient();
 
 
 builder.Services.AddSingleton<IChatClient>(innerChatClient);
 builder.Services.AddScoped<ArticleSummaryService>();
 
-*/
 
 // builder.Services.AddAzureOpenAIChatClient("azure", options =>
 // {
@@ -50,13 +47,9 @@ builder.Services.AddScoped<ArticleSummaryService>();
 
 builder.Services.AddSingleton<EmbeddingClient>(provider =>
 {
-    var endpoint = new Uri(Environment.GetEnvironmentVariable("AZURE_ENDPOINT"));
-    var credential = new AzureKeyCredential(Environment.GetEnvironmentVariable("OPENAI_APIKEY"));
+    var endpoint = new Uri(Environment.GetEnvironmentVariable("EMBEDDING_ENDPOINT")!);
+    var credential = new AzureKeyCredential(Environment.GetEnvironmentVariable("EMBEDDING_APIKEY")!);
     var model = "text-embedding-3-small";
-    var openAIOptions = new OpenAIClientOptions()
-    {
-        Endpoint = endpoint
-    };
 
     AzureOpenAIClient openAIclient = new AzureOpenAIClient(endpoint, credential);
 
