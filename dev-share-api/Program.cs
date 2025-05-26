@@ -1,7 +1,7 @@
-using Azure;
 using Azure.AI.OpenAI;
-using dev_share_api.Services;
 using Microsoft.Extensions.AI;
+using dev_share_api.Services;
+using Azure;
 using UrlExtractorApi.Services;
 using System.ClientModel;
 using OpenAI.Embeddings;
@@ -31,7 +31,8 @@ builder.Services.AddCors(options =>
 var innerChatClient = new AzureOpenAIClient(
     new Uri(Environment.GetEnvironmentVariable("4O_ENDPOINT")!), 
     new ApiKeyCredential(Environment.GetEnvironmentVariable("4O_APIKEY")!))  //存在userSecretsId里 dotnet user-secrets init
-    .GetChatClient("gpt-4o-mini").AsIChatClient();
+    .GetChatClient("gpt-4o-mini")
+    .AsIChatClient();
 
 
 builder.Services.AddSingleton<IChatClient>(innerChatClient);

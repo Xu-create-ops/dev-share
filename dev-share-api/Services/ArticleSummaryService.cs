@@ -43,7 +43,7 @@ public class ArticleSummaryService
           "Tags": [], // A list of 3-7 relevant technical tags, e.g., ["C#", ".NET", "Cloud", "TypeScript"]
           "Summary": "" // A brief, clear summary of the article within 100 words
         }
-        Analsze the article and fill in each field accordingly. Do not invent details not present in the article. Focus on clarity, relevance, and accurate representation of the content.
+        Analyse the article and fill in each field accordingly. Do not invent details not present in the article. Focus on clarity, relevance, and accurate representation of the content.
         # Article content:
 
         {{article}}
