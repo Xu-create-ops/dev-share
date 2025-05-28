@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using dev_share_api.Models;
+﻿using dev_share_api.Models;
 using dev_share_api.Services;
 using Microsoft.AspNetCore.Mvc;
 

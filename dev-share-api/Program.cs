@@ -37,6 +37,7 @@ var innerChatClient = new AzureOpenAIClient(
 
 builder.Services.AddSingleton<IChatClient>(innerChatClient);
 builder.Services.AddScoped<ArticleSummaryService>();
+builder.Services.AddScoped<QuestionGenerationService>();
 
 
 // builder.Services.AddAzureOpenAIChatClient("azure", options =>

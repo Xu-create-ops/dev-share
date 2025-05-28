@@ -35,8 +35,8 @@ public class ExtractController : ControllerBase{
             result = await TryPlaywright(url);
         }
 
-        await _articleSummaryService.SummarizeArticleAsync(result);
-        return Ok(new { url, content = result });
+        var summary = await _articleSummaryService.SummarizeArticleAsync(result);
+        return Ok(new { url, content = summary });
     }
 
 

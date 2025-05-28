@@ -16,7 +16,7 @@ public class ArticleSummaryService
         _chatClient = chatClient;
     }
 
-    public async Task SummarizeArticleAsync(string article)
+    public async Task<ActionResult<string>>SummarizeArticleAsync(string article)
     {
         var prompt = $$"""
         You will receive an input text and your task is to summarize the article in no more than 100 words.
@@ -29,7 +29,7 @@ public class ArticleSummaryService
         """;
 
         var response = await _chatClient.GetResponseAsync(prompt);
-        Console.WriteLine(response.Text);
+        return response.Text;
     }
 
     public async Task<ActionResult<EmbeddingRequest>> GetCategorisedSummaryAsync(string article)
