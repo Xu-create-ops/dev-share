@@ -55,6 +55,7 @@ public class ExtractController : ControllerBase
         return Ok(new { url, content = result });
     }
 
+    //
     [HttpPost("embedding/generate")]
     public async Task<ActionResult<float[]>> GenerateEmbedding([FromBody] GenerateEmbeddingRequest request)
     {
@@ -68,8 +69,15 @@ public class ExtractController : ControllerBase
     }
 
     [HttpPut("embedding/search")]
-    public async Task<ActionResult<List<VectorSearchResultDto>>> SearchEmbedding([FromBody] SearchEmbeddingRequest request)
+    // public async Task<ActionResult<List<VectorSearchResultDto>>> SearchEmbedding([FromBody] SearchEmbeddingRequest request)
+    public async Task<> searchResult([FromBody] GenerateEmbeddingRequest request)
     {
+        //prompt -> embedding
+        var vectorResult = await _embeddingService.GetEmbeddingAsync(request.Text);
+
+        // vectordb -> response
+        
+
         return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives));
     }
 
