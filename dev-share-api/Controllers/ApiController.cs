@@ -51,8 +51,8 @@ public class ExtractController : ControllerBase
                     .AppendLine($"{result}")
                     .ToString();
 
-        await _summaryService.SummarizeAsync(prompt);
-        return Ok(new { url, content = result });
+        var summarizedRes = await _summaryService.SummarizeAsync(prompt);
+        return Ok(new { url, content = summarizedRes });
     }
 
     //
@@ -69,8 +69,7 @@ public class ExtractController : ControllerBase
     }
 
     [HttpPut("embedding/search")]
-    // public async Task<ActionResult<List<VectorSearchResultDto>>> SearchEmbedding([FromBody] SearchEmbeddingRequest request)
-    public async Task<> searchResult([FromBody] GenerateEmbeddingRequest request)
+    public async Task<ActionResult<List<VectorSearchResultDto>>> searchResult([FromBody] GenerateEmbeddingRequest request)
     {
         //prompt -> embedding
         var vectorResult = await _embeddingService.GetEmbeddingAsync(request.Text);
@@ -78,7 +77,7 @@ public class ExtractController : ControllerBase
         // vectordb -> response
         
 
-        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives));
+        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives, request.queryText));
     }
 
     private string? TryHtmlAgilityPack(string url)
