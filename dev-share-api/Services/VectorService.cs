@@ -9,7 +9,7 @@ public class VectorService : IVectorService
 {
     private readonly QdrantClient _client;
     private readonly string _collection = "blotz-dev";
-    private readonly int _dimensions = 4;
+    private readonly int _dimensions = 384;
 
     public VectorService(QdrantClient qdrantClient)
     {

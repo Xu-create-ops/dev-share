@@ -8,7 +8,7 @@ public class EmbeddingService : IEmbeddingService
 {
     private readonly OpenAIClient _client;
     private const string embeddingModelId = "text-embedding-3-small";
-    private const int _dimensions = 4;
+    private const int _dimensions = 384;
 
     public EmbeddingService(OpenAIClient openAIClient)
     {

@@ -75,9 +75,8 @@ public class ExtractController : ControllerBase
         var vectorResult = await _embeddingService.GetEmbeddingAsync(request.Text);
 
         // vectordb -> response
-        
-
-        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives, request.queryText));
+        var topK = 3;
+        return Ok(await _vectorService.SearchEmbeddingAsync(vectorResult, topK, request.Text));
     }
 
     private string? TryHtmlAgilityPack(string url)
