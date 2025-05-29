@@ -8,6 +8,7 @@ public class EmbeddingService : IEmbeddingService
 {
     private readonly OpenAIClient _client;
     private const string embeddingModelId = "text-embedding-3-small";
+    private const int _dimensions = 4;
 
     public EmbeddingService(OpenAIClient openAIClient)
     {
@@ -21,7 +22,7 @@ public class EmbeddingService : IEmbeddingService
         // var resp = await _client.PostAsJsonAsync($"/pipeline/feature-extraction/{Model}", new { inputs = text });
         // resp.EnsureSuccessStatusCode();
         //var raw = await resp.Content.ReadFromJsonAsync<float[][]>();
-        EmbeddingGenerationOptions options = new() { Dimensions = 4 };
+        EmbeddingGenerationOptions options = new() { Dimensions = _dimensions };
         OpenAIEmbedding resp = await _client.GetEmbeddingClient(model: embeddingModelId).GenerateEmbeddingAsync(text, options);
         var vector = resp.ToFloats();
 

@@ -51,8 +51,8 @@ public class ExtractController : ControllerBase
                     .AppendLine($"{result}")
                     .ToString();
 
-        await _summaryService.SummarizeAsync(prompt);
-        return Ok(new { url, content = result });
+        var summarizedRes = await _summaryService.SummarizeAsync(prompt);
+        return Ok(new { url, content = summarizedRes });
     }
 
     [HttpPost("embedding/generate")]
@@ -70,7 +70,13 @@ public class ExtractController : ControllerBase
     [HttpPut("embedding/search")]
     public async Task<ActionResult<List<VectorSearchResultDto>>> SearchEmbedding([FromBody] SearchEmbeddingRequest request)
     {
-        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives));
+        return Ok(await _vectorService.SearchEmbeddingAsync(request.QueryEmbedding, topK: request.TopRelatives, request.queryText));
+    }
+
+    [HttpPost("embedding/indexing")]
+    public async Task<ActionResult<UpdateResult>> Indexing([FromBody] string field)
+    {
+        return Ok(await _vectorService.IndexingAsync(field));
     }
 
     private string? TryHtmlAgilityPack(string url)
