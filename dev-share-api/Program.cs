@@ -3,6 +3,7 @@ using OpenAI;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using Services;
+using Executor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +78,13 @@ builder.Services.AddScoped<ISummaryService>(sp =>
     var openAiClient = sp.GetRequiredService<OpenAIClient>();
     return new SummaryService(openAiClient);
 });
+
+
+//Not allowed to alter the sort of the following code. 
+builder.Services.AddScoped<ShareChainExecutor>();
+builder.Services.AddScoped<IShareChainHandle, SummarizeShareChainHandle>();
+builder.Services.AddScoped<IShareChainHandle, EmbeddingShareChainHandle>();
+builder.Services.AddScoped<IShareChainHandle, VectorShareChainHandle>();
 
 
 var app = builder.Build();

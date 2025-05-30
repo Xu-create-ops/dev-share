@@ -6,6 +6,7 @@ using Microsoft.Extensions.AI;
 using Services;
 using Qdrant.Client.Grpc;
 using System.Text;
+using Executor;
 
 namespace UrlExtractorApi.Controllers;
 
@@ -16,15 +17,48 @@ public class ExtractController : ControllerBase
     private readonly ISummaryService _summaryService;
     private readonly IEmbeddingService _embeddingService;
     private readonly IVectorService _vectorService;
+    private readonly ShareChainExecutor _shareChainExecutor;
 
     public ExtractController(
         ISummaryService summaryService,
         IEmbeddingService embeddingService,
-        IVectorService vectorService)
+        IVectorService vectorService,
+        ShareChainExecutor shareChainExecutor)
     {
         _summaryService = summaryService;
         _embeddingService = embeddingService;
         _vectorService = vectorService;
+        _shareChainExecutor = shareChainExecutor;
+    }
+
+    [HttpPost("share")]
+    public async Task<IActionResult> share([FromBody] UrlRequest request)
+    {
+ 
+        var url = request.Url;
+        Console.WriteLine($"Extracting: {url}");
+
+        // 尝试 HtmlAgilityPack 抓取
+        var result = TryHtmlAgilityPack(url);
+
+        // 如果 HAP 解析失败（返回空），则使用 Playwright 模拟浏览器加载页面
+        if (string.IsNullOrWhiteSpace(result))
+        {
+            result = await TryPlaywright(url);
+        }
+
+        var prompt = new StringBuilder()
+                    .AppendLine("You will receive an input text and your task is to summarize the article in no more than 100 words.")
+                    .AppendLine("Only return the summary. Do not include any explanation.")
+                    .AppendLine("# Article content:")
+                    .AppendLine($"{result}")
+                    .ToString();
+        await _shareChainExecutor.ExecuteAsync(new ResourceShareContext
+        {
+            Url = url,
+            Prompt = prompt
+        });
+        return Ok();
     }
 
 

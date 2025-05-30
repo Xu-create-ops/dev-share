@@ -60,7 +60,8 @@ export default function ShareResourcePage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url: url
+        url: url,
+        prompt: prompt
       }),
     })
     if(!res.ok){
