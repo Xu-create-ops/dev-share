@@ -88,6 +88,13 @@ public class ExtractController : ControllerBase
         await _summaryService.SummarizeAsync(prompt);
         return Ok(new { url, content = result });
     }
+    
+    [HttpPost("search")]
+    public async Task<ActionResult<float[]>> search([FromBody] SearchRequest request)
+    {
+        var vectors = await _embeddingService.GetEmbeddingAsync(request.Text);
+        return Ok(await _vectorService.SearchEmbeddingAsync(vectors, topK: request.TopRelatives));
+    }
 
     [HttpPost("embedding/generate")]
     public async Task<ActionResult<float[]>> GenerateEmbedding([FromBody] GenerateEmbeddingRequest request)
