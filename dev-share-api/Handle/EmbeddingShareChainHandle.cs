@@ -11,6 +11,14 @@ public class EmbeddingShareChainHandle : BaseShareChainHandle
     {
         _embeddingService = embeddingService;
     }
+    
+    protected override void Validate(ResourceShareContext context)
+    {
+        if (string.IsNullOrWhiteSpace(context.Summary))
+        {
+            throw new ArgumentNullException(nameof(context.Summary), "Prompt cannot be null or empty.");
+        }
+    }
 
     protected async override Task<HandlerResult> ProcessAsync(ResourceShareContext context)
     {

@@ -13,6 +13,14 @@ public class SummarizeShareChainHandle : BaseShareChainHandle
         _summaryService = summaryService;
     }
 
+    protected override void Validate(ResourceShareContext context)
+    {
+        if (string.IsNullOrWhiteSpace(context.Prompt))
+        {
+            throw new ArgumentNullException(nameof(context.Prompt), "Prompt cannot be null or empty.");
+        }
+    }
+
 
     protected async override Task<HandlerResult> ProcessAsync(ResourceShareContext context)
     {

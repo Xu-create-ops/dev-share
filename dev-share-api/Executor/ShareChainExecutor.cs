@@ -12,14 +12,13 @@ public class ShareChainExecutor
         _handlers = handlers;
     }
 
-    public async Task<HandlerResult> ExecuteAsync(ResourceShareContext context)
+    public async Task ExecuteAsync(ResourceShareContext context)
     {
         foreach (var handler in _handlers)
         {
             var result = await handler.HandleAsync(context);
             if (!result.IsSuccess)
-                return result;
+                return;
         }
-        return HandlerResult.Success();
     }
 }
