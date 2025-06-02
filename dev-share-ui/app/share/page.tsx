@@ -54,13 +54,14 @@ export default function ShareResourcePage() {
     
     // Simulate API call
     
-    const res = await fetch('http://localhost:5066/api/extract',{
+    const res = await fetch('http://localhost:5066/api/share',{
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url: url
+        url: url,
+        prompt: prompt
       }),
     })
     if(!res.ok){

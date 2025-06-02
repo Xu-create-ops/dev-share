@@ -1,8 +1,10 @@
 using Microsoft.OpenApi.Models;
-using OpenAI;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using Services;
+using Executor;
+using Azure.AI.OpenAI;
+using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,12 +54,15 @@ builder.Services.AddSingleton<QdrantClient>(_ =>
 });
 
 // OpenAI client
-builder.Services.AddSingleton<OpenAIClient>(_ =>
+builder.Services.AddSingleton<AzureOpenAIClient>(_ =>
 {
     var apiKey = openAiConfig["ApiKey"]
                  ?? throw new InvalidOperationException("OpenAI:ApiKey is missing");
-    return new OpenAIClient(apiKey);
+    var endpoint = openAiConfig["Endpoint"]
+                 ?? throw new InvalidOperationException("OpenAI:Endpoint is missing");
+    return new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey));
 });
+
 
 // Application services
 builder.Services.AddScoped<IVectorService>(sp =>
@@ -68,15 +73,22 @@ builder.Services.AddScoped<IVectorService>(sp =>
 
 builder.Services.AddScoped<IEmbeddingService>(sp =>
 {
-    var openAiClient = sp.GetRequiredService<OpenAIClient>();
+    var openAiClient = sp.GetRequiredService<AzureOpenAIClient>();
     return new EmbeddingService(openAiClient);
 });
 
 builder.Services.AddScoped<ISummaryService>(sp =>
 {
-    var openAiClient = sp.GetRequiredService<OpenAIClient>();
+    var openAiClient = sp.GetRequiredService<AzureOpenAIClient>();
     return new SummaryService(openAiClient);
 });
+
+
+//Not allowed to alter the sort of the following code. 
+builder.Services.AddScoped<ShareChainExecutor>();
+builder.Services.AddScoped<IShareChainHandle, SummarizeShareChainHandle>();
+builder.Services.AddScoped<IShareChainHandle, EmbeddingShareChainHandle>();
+builder.Services.AddScoped<IShareChainHandle, VectorShareChainHandle>();
 
 
 var app = builder.Build();
