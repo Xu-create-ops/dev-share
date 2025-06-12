@@ -8,7 +8,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: "dev-share-ui"
+  WEBAPP_NAME: "dev-share-ui-v1"
 
 jobs:
   build:
