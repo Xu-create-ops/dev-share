@@ -3,7 +3,7 @@ name: Build and deploy Next.js app to Azure Web App
 on:
   push:
     branches:
-      - main  
+      - '**'  
   workflow_dispatch:
 
 env:
@@ -28,6 +28,12 @@ jobs:
           npm run build
         working-directory: ./dev-share-ui
 
+      - name: Copy static assets for standalone
+        run: |
+          cd dev-share-ui
+          cp -r .next/static .next/standalone/.next/
+          if [ -d "public" ]; then cp -r public .next/standalone/; fi
+
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -35,4 +41,4 @@ jobs:
           app-name: ${{ env.WEBAPP_NAME }}
           slot-name: "Production"
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
-          package:  dev-share-ui/build/standalone
+          package:  dev-share-ui/.next/standalone
