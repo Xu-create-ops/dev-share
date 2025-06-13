@@ -33,7 +33,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost3000", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "https://dev-share-ui-v1-c7ewhweraqgwasgr.australiaeast-01.azurewebsites.net")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
