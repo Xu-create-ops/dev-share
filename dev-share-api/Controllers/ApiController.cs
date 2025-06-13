@@ -37,6 +37,14 @@ public class ExtractController : ControllerBase
         return Ok("hello world");
     }
 
+    [HttpPost("test3")]
+    public async Task<IActionResult> test3()
+    {
+ 
+      
+        return Ok();
+    }
+
     [HttpPost("share")]
     public async Task<IActionResult> share([FromBody] UrlRequest request)
     {
