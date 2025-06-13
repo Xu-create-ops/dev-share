@@ -35,29 +35,7 @@ public class ExtractController : ControllerBase
     public async Task<IActionResult> share([FromBody] UrlRequest request)
     {
  
-        var url = request.Url;
-        Console.WriteLine($"Extracting: {url}");
-
-        // 尝试 HtmlAgilityPack 抓取
-        var result = TryHtmlAgilityPack(url);
-
-        // 如果 HAP 解析失败（返回空），则使用 Playwright 模拟浏览器加载页面
-        if (string.IsNullOrWhiteSpace(result))
-        {
-            result = await TryPlaywright(url);
-        }
-
-        var prompt = new StringBuilder()
-                    .AppendLine("You will receive an input text and your task is to summarize the article in no more than 100 words.")
-                    .AppendLine("Only return the summary. Do not include any explanation.")
-                    .AppendLine("# Article content:")
-                    .AppendLine($"{result}")
-                    .ToString();
-        await _shareChainExecutor.ExecuteAsync(new ResourceShareContext
-        {
-            Url = url,
-            Prompt = prompt
-        });
+      
         return Ok();
     }
 
