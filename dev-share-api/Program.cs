@@ -31,9 +31,9 @@ builder.Services.AddSwaggerGen(c =>
 // cors
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost3000", policy =>
+    options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://dev-share-ui-v1-c7ewhweraqgwasgr.australiaeast-01.azurewebsites.net")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -100,7 +100,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowLocalhost3000");
+app.UseCors();
 app.MapControllers();
 
 await app.RunAsync();

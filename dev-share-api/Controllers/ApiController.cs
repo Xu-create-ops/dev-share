@@ -31,6 +31,12 @@ public class ExtractController : ControllerBase
         _shareChainExecutor = shareChainExecutor;
     }
 
+    [HttpGet("test")]
+    public async Task<IActionResult> test_v1()
+    {
+        return Ok("hello world");
+    }
+
     [HttpPost("share")]
     public async Task<IActionResult> share([FromBody] UrlRequest request)
     {
