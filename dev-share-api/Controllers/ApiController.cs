@@ -19,22 +19,34 @@ public class ExtractController : ControllerBase
     private readonly IVectorService _vectorService;
     private readonly ShareChainExecutor _shareChainExecutor;
 
+    private readonly IConfiguration _configuration;
+
     public ExtractController(
         ISummaryService summaryService,
         IEmbeddingService embeddingService,
         IVectorService vectorService,
-        ShareChainExecutor shareChainExecutor)
+        ShareChainExecutor shareChainExecutor,
+        IConfiguration configuration)
     {
         _summaryService = summaryService;
         _embeddingService = embeddingService;
         _vectorService = vectorService;
         _shareChainExecutor = shareChainExecutor;
+        _configuration = configuration;
     }
 
     [HttpGet("test")]
     public async Task<IActionResult> test_v1()
     {
-        return Ok("hello world");
+        var apiKey = _configuration["OpenAI:ApiKey"];
+        var endpoint = _configuration["OpenAI:Endpoint"];
+
+        return Ok(new
+        {
+            Message = "hello world",
+            OpenAI_ApiKey = apiKey,
+            OpenAI_Endpoint = endpoint
+        });
     }
 
     [HttpPost("test3")]
