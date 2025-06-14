@@ -40,8 +40,7 @@ public class ExtractController : ControllerBase
     [HttpPost("test3")]
     public async Task<IActionResult> test3()
     {
- 
-      
+
         return Ok();
     }
 
@@ -49,7 +48,20 @@ public class ExtractController : ControllerBase
     public async Task<IActionResult> share([FromBody] UrlRequest request)
     {
  
-      
+        var url = request.Url;
+        Console.WriteLine($"Extracting: {url}");
+
+        var prompt = new StringBuilder()
+                    .AppendLine("You will receive an input text and your task is to summarize the article in no more than 100 words.")
+                    .AppendLine("Only return the summary. Do not include any explanation.")
+                    .AppendLine("# Article content:")
+                    .AppendLine("Learn C# on Codecademy to master Microsoft's versatile programming language, used for creating websites, mobile apps, video games, and virtual reality. The course covers essential C# concepts, data types, variables, numbers, strings, logic, and arrays, equipping you with the skills to write reliable and maintainable code. With its user-friendly syntax and robust community support, C# is an ideal choice for beginners looking to enhance their programming skills.")
+                    .ToString();
+        await _shareChainExecutor.ExecuteAsync(new ResourceShareContext
+        {
+            Url = url,
+            Prompt = prompt
+        });
         return Ok();
     }
 
