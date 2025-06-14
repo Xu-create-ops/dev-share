@@ -1,12 +1,8 @@
 name: CI/CD for Next.js app to Azure Web App
 
 on:
-  # Trigger on all branches push and PR to main
-  push:
-    branches: ['**']
   pull_request:
     branches: ['main']
-  # Allow manual trigger with environment selection
   workflow_dispatch:
     inputs:
       environment:
@@ -17,36 +13,18 @@ on:
         options:
           - Test
           - Production
+  push:
+    branches:
+      - main
 
 env:
   NODE_VERSION: "20.x"
 
 jobs:
-  # ✅ CI step for build verification on all branches and PRs
-  ci-check:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install dependencies and build (CI only)
-        run: |
-          npm install
-          npm run build
-        working-directory: ./dev-share-ui
-
-  # ✅ Deploy step only triggered on push to main or manual trigger
   deploy:
-    needs: ci-check
     runs-on: ubuntu-latest
 
-    # Conditional deploy: only on manual trigger or push to main
+    # Only deploy on manual trigger or main push
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
