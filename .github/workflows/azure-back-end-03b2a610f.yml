@@ -42,10 +42,11 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish ./dev-share-api/dev-share-api.csproj \
-            --configuration Release \
-            --output ./publish \
-            -p:EnvironmentName=${{ env.IS_PRODUCTION == 'true' && 'Production' || 'Test' }}
+          $envName = if ("${{ env.IS_PRODUCTION }}" -eq "true") { "Production" } else { "Test" }
+          dotnet publish ./dev-share-api/dev-share-api.csproj `
+            --configuration Release `
+            --output ./publish `
+            -p:EnvironmentName=$envName
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
