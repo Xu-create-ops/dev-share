@@ -38,6 +38,7 @@ public class ExtractController : ControllerBase
     [HttpGet("test")]
     public async Task<IActionResult> test_v1()
     {
+        
         var apiKey = _configuration["OpenAA:ApiKey"];
         var endpoint = _configuration["OpenAA:Endpoint"];
 

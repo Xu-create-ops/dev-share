@@ -1,13 +1,19 @@
-name: Build and deploy .NET app to Azure Web App
+name: CI/CD for .NET app to Azure
 
 on:
+  # ✅ PR 到 main：只执行 CI
+  pull_request:
+    branches: ['main']
+
+  # ✅ 合并 PR 到 main：自动部署到 Test
   push:
-    branches:
-      - main
+    branches: ['main']
+
+  # ✅ 手动触发部署
   workflow_dispatch:
     inputs:
       environment:
-        description: '选择部署环境'
+        description: 'Select deployment environment'
         required: true
         default: 'Test'
         type: choice
@@ -19,11 +25,32 @@ env:
   DOTNET_VERSION: '9.0.x'
 
 jobs:
-  build-and-deploy:
+  ci-check:
+    # ✅ 只在 PR 阶段执行
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ./dev-share-api/dev-share-api.csproj
+
+      - name: Build
+        run: dotnet build ./dev-share-api/dev-share-api.csproj --configuration Release --no-restore
+
+  deploy:
+    # ✅ 仅在 main 合并 或 workflow_dispatch 时执行
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup .NET SDK
@@ -46,7 +73,7 @@ jobs:
             -p:EnvironmentName=$envName
 
       - name: Deploy to Azure Web App - Production
-        if: ${{ github.event.inputs.environment == 'Production' }}
+        if: github.event.inputs.environment == 'Production'
         uses: azure/webapps-deploy@v3
         with:
           app-name: prod-share-app
@@ -54,7 +81,7 @@ jobs:
           package: ./publish
 
       - name: Deploy to Azure Web App - Test
-        if: ${{ github.event.inputs.environment == 'Test' }}
+        if: github.event.inputs.environment != 'Production'
         uses: azure/webapps-deploy@v3
         with:
           app-name: dev-share
