@@ -8,10 +8,12 @@ using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true); // overrides
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables(); 
 
 // optional - if you don't want to have 'appsettings.local.json' for debugging purpose
 // Load secrets in development before building

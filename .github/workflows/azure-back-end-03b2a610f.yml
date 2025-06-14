@@ -1,19 +1,29 @@
-name: Build and deploy .net app to Azure Web App
+name: Build and deploy .NET app to Azure Web App
 
 on:
   push:
     branches:
-      - '**'  
+      - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: '选择部署环境'
+        required: true
+        default: 'Test'
+        type: choice
+        options:
+          - Test
+          - Production
 
 env:
-  WEBAPP_NAME: dev-share                  
-  DOTNET_VERSION: '9.0.x'                    
-  APPLICATION_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+  DOTNET_VERSION: '9.0.x'
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
+
+    env:
+      IS_PRODUCTION: ${{ github.event.inputs.environment == 'Production' }}
 
     steps:
       - name: Checkout source
@@ -31,11 +41,15 @@ jobs:
         run: dotnet build ./dev-share-api/dev-share-api.csproj --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./dev-share-api/dev-share-api.csproj --configuration Release --output ./publish
+        run: |
+          dotnet publish ./dev-share-api/dev-share-api.csproj \
+            --configuration Release \
+            --output ./publish \
+            -p:EnvironmentName=${{ env.IS_PRODUCTION == 'true' && 'Production' || 'Test' }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
+          app-name: ${{ env.IS_PRODUCTION == 'true' && 'prod-share-app' || 'dev-share' }}
+          publish-profile: ${{ env.IS_PRODUCTION == 'true' && secrets.PROD_AZURE_WEBAPP_PUBLISH_PROFILE || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish
