@@ -22,9 +22,6 @@ jobs:
   build-and-deploy:
     runs-on: windows-latest
 
-    env:
-      IS_PRODUCTION: ${{ github.event.inputs.environment == 'Production' }}
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -42,15 +39,24 @@ jobs:
 
       - name: Publish
         run: |
-          $envName = if ("${{ env.IS_PRODUCTION }}" -eq "true") { "Production" } else { "Test" }
+          $envName = if ("${{ github.event.inputs.environment }}" -eq "Production") { "Production" } else { "Test" }
           dotnet publish ./dev-share-api/dev-share-api.csproj `
             --configuration Release `
             --output ./publish `
             -p:EnvironmentName=$envName
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App - Production
+        if: ${{ github.event.inputs.environment == 'Production' }}
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.IS_PRODUCTION == 'true' && 'prod-share-app' || 'dev-share' }}
-          publish-profile: ${{ env.IS_PRODUCTION == 'true' && secrets.PROD_AZURE_WEBAPP_PUBLISH_PROFILE || secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-name: prod-share-app
+          publish-profile: ${{ secrets.PROD_AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
+
+      - name: Deploy to Azure Web App - Test
+        if: ${{ github.event.inputs.environment == 'Test' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: dev-share
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./publish

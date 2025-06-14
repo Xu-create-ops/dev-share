@@ -22,9 +22,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    env:
-      IS_PRODUCTION: ${{ github.event.inputs.environment == 'Production' }}
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -36,7 +33,7 @@ jobs:
 
       - name: Copy correct .env file
         run: |
-          cp ./dev-share-ui/.env.${{ env.IS_PRODUCTION == 'true' && 'production' || 'test' }} ./dev-share-ui/.env
+          cp ./dev-share-ui/.env.${{ github.event.inputs.environment == 'Production' && 'production' || 'test' }} ./dev-share-ui/.env
 
       - name: npm install and build
         run: |
@@ -50,9 +47,18 @@ jobs:
           cp -r .next/static .next/standalone/.next/
           if [ -d "public" ]; then cp -r public .next/standalone/; fi
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App - Production
+        if: ${{ github.event.inputs.environment == 'Production' }}
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.IS_PRODUCTION == 'true' && 'prod-share-ui' || 'dev-share-ui-v1' }}
-          publish-profile: ${{ env.IS_PRODUCTION == 'true' && secrets.PROD_APP_PUBLISH_PROFILE || secrets.APP_PUBLISH_PROFILE }}
+          app-name: prod-share-ui
+          publish-profile: ${{ secrets.PROD_APP_PUBLISH_PROFILE }}
+          package: dev-share-ui/.next/standalone
+
+      - name: Deploy to Azure Web App - Test
+        if: ${{ github.event.inputs.environment == 'Test' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: dev-share-ui-v1
+          publish-profile: ${{ secrets.APP_PUBLISH_PROFILE }}
           package: dev-share-ui/.next/standalone
