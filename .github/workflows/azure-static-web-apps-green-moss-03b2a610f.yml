@@ -1,13 +1,16 @@
-name: Build and deploy Next.js app to Azure Web App
+name: CI/CD for Next.js app to Azure Web App
 
 on:
+  # Trigger on all branches push and PR to main
   push:
-    branches:
-      - main
+    branches: ['**']
+  pull_request:
+    branches: ['main']
+  # Allow manual trigger with environment selection
   workflow_dispatch:
     inputs:
       environment:
-        description: '选择部署环境'
+        description: 'Select deployment environment'
         required: true
         default: 'Test'
         type: choice
@@ -19,11 +22,37 @@ env:
   NODE_VERSION: "20.x"
 
 jobs:
-  build-and-deploy:
+  # ✅ CI step for build verification on all branches and PRs
+  ci-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies and build (CI only)
+        run: |
+          npm install
+          npm run build
+        working-directory: ./dev-share-ui
+
+  # ✅ Deploy step only triggered on push to main or manual trigger
+  deploy:
+    needs: ci-check
+    runs-on: ubuntu-latest
+
+    # Conditional deploy: only on manual trigger or push to main
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -33,15 +62,19 @@ jobs:
 
       - name: Copy correct .env file
         run: |
-          cp ./dev-share-ui/.env.${{ github.event.inputs.environment == 'Production' && 'production' || 'test' }} ./dev-share-ui/.env
+          if [[ "${{ github.event.inputs.environment }}" == "Production" ]]; then
+            cp ./dev-share-ui/.env.production ./dev-share-ui/.env
+          else
+            cp ./dev-share-ui/.env.test ./dev-share-ui/.env
+          fi
 
-      - name: npm install and build
+      - name: Install dependencies and build
         run: |
           npm install
           npm run build
         working-directory: ./dev-share-ui
 
-      - name: Copy static assets for standalone deployment
+      - name: Prepare static assets for standalone deployment
         run: |
           cd dev-share-ui
           cp -r .next/static .next/standalone/.next/
@@ -56,7 +89,7 @@ jobs:
           package: dev-share-ui/.next/standalone
 
       - name: Deploy to Azure Web App - Test
-        if: ${{ github.event.inputs.environment == 'Test' }}
+        if: ${{ github.event.inputs.environment != 'Production' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: dev-share-ui-v1

@@ -1,13 +1,16 @@
-name: Build and deploy .NET app to Azure Web App
+name: CI/CD for .NET app to Azure
 
 on:
+  # Automatically trigger on all branches push and PR to main
   push:
-    branches:
-      - main
+    branches: ['**']
+  pull_request:
+    branches: ['main']
+  # Allow manual trigger with environment selection
   workflow_dispatch:
     inputs:
       environment:
-        description: '选择部署环境'
+        description: 'Select deployment environment'
         required: true
         default: 'Test'
         type: choice
@@ -19,11 +22,42 @@ env:
   DOTNET_VERSION: '9.0.x'
 
 jobs:
-  build-and-deploy:
+  # ✅ CI: build + test 
+  ci-check:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ./dev-share-api/dev-share-api.csproj
+
+      - name: Build
+        run: dotnet build ./dev-share-api/dev-share-api.csproj --configuration Release --no-restore
+
+      - name: Run tests (optional)
+        run: echo "✅ 你可以在这里添加 dotnet test"
+
+  # ✅ Deploy step only triggered on push to main or manual trigger
+  deploy:
+    needs: ci-check
     runs-on: windows-latest
 
+    # Conditional deploy: only on manual trigger or push to main
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+
+    env:
+      IS_PRODUCTION: ${{ github.event.inputs.environment == 'Production' }}
+
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup .NET SDK
@@ -39,14 +73,14 @@ jobs:
 
       - name: Publish
         run: |
-          $envName = if ("${{ github.event.inputs.environment }}" -eq "Production") { "Production" } else { "Test" }
+          $envName = if ("${{ env.IS_PRODUCTION }}" -eq "true") { "Production" } else { "Test" }
           dotnet publish ./dev-share-api/dev-share-api.csproj `
             --configuration Release `
             --output ./publish `
             -p:EnvironmentName=$envName
 
       - name: Deploy to Azure Web App - Production
-        if: ${{ github.event.inputs.environment == 'Production' }}
+        if: ${{ env.IS_PRODUCTION == 'true' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: prod-share-app
@@ -54,7 +88,7 @@ jobs:
           package: ./publish
 
       - name: Deploy to Azure Web App - Test
-        if: ${{ github.event.inputs.environment == 'Test' }}
+        if: ${{ env.IS_PRODUCTION != 'true' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: dev-share
